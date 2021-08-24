@@ -22,6 +22,10 @@ namespace ice
         ) noexcept;
         ~IceWorldTrait_TileMap() noexcept = default;
 
+        void set_tile_size(
+            ice::vec2u size
+        ) noexcept override;
+
         void load_tilemap(
             ice::TileMap const& tilemap
         ) noexcept override;
@@ -48,6 +52,7 @@ namespace ice
         ice::Allocator& _allocator;
         ice::WorldTrait_Physics2D& _physics;
 
+        ice::vec2f _tile_size;
         ice::pod::Array<ice::TileMapInstance> _tilemaps;
     };
 

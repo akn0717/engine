@@ -68,6 +68,8 @@ namespace ice
     class WorldTrait_TileMap : public ice::WorldTrait
     {
     public:
+        virtual void set_tile_size(ice::vec2u size) noexcept = 0;
+
         virtual void load_tilemap(ice::TileMap const& tilemap) noexcept = 0;
     };
 

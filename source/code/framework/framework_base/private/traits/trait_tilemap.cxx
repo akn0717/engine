@@ -67,6 +67,14 @@ namespace ice
     {
     }
 
+    void IceWorldTrait_TileMap::set_tile_size(ice::vec2u size) noexcept
+    {
+        _tile_size = ice::vec2f{
+            static_cast<ice::f32>(size.x),
+            static_cast<ice::f32>(size.y)
+        };
+    }
+
     void IceWorldTrait_TileMap::load_tilemap(
         ice::TileMap const& tilemap
     ) noexcept
@@ -115,6 +123,10 @@ namespace ice
         {
             ice::TileMapInstance& tilemap_info = _tilemaps[0];
 
+            ice::arr2f const tilemap_tile_size = ice::math::arr(tilemap_info.tilemap->tile_size);
+            ice::arr2f const tile_size = ice::math::max(ice::math::arr(_tile_size), tilemap_tile_size);
+            ice::arr2f const tile_scaling = tile_size / tilemap_tile_size;
+
             if (tilemap_info.tilemap->tile_collisions > 0 && tilemap_info.physics_ids == nullptr)
             {
                 ice::TileMap const& tilemap = *tilemap_info.tilemap;
@@ -136,6 +148,7 @@ namespace ice
                     {
                         ice::u32 const tile_x = (tiles[idx].offset & 0x0000'ffff) >> 0;
                         ice::u32 const tile_y = (tiles[idx].offset & 0xffff'0000) >> 16;
+                        ice::vec2f const tile_coords = ice::vec2f{ static_cast<ice::f32>(tile_x), static_cast<ice::f32>(tile_y) } * tile_size;
 
                         for (ice::TileCollision const& collision : tile_collisions)
                         {
@@ -151,11 +164,11 @@ namespace ice
 
                                     for (ice::u32 vtx = 0; vtx < object->vertex_count; ++vtx)
                                     {
-                                        temp_vertices[vtx] = temp_vertices[vtx] / Constant_PixelsInMeter;
+                                        temp_vertices[vtx] = temp_vertices[vtx] * tile_scaling / Constant_PixelsInMeter;
                                     }
 
                                     *physics_ids = _physics.create_static_body(
-                                        ice::vec2f{ tile_x * tilemap.tile_size.x, tile_y * tilemap.tile_size.y } / Constant_PixelsInMeter,
+                                        tile_coords / Constant_PixelsInMeter,
                                         object->vertex_count,
                                         temp_vertices
                                     );
@@ -171,7 +184,7 @@ namespace ice
 
             ice::IceTileMap_RenderInfo* render_info = frame.create_named_object<ice::IceTileMap_RenderInfo>("tilemap.render-info"_sid);
             render_info->tilemap = tilemap_info.tilemap;
-            render_info->tilesize = tilemap_info.tilemap->tile_size;
+            render_info->tilesize = tilemap_info.tilemap->tile_size * tile_scaling;
 
             runner.execute_task(
                 detail::task_prepare_rendering_data(frame, runner, *tilemap_info.tilemap, *render_info),
