@@ -30,7 +30,7 @@ namespace ice::math
         vec<Size, T> result;
         for (u32 i = 0; i < Size; ++i)
         {
-            result.v[0][i] = T{ left.v[0][i] + right.v[0][i] };
+            result.v[0][i] = left.v[0][i] + T{ right.v[0][i] };
         }
         return result;
     }
@@ -41,7 +41,7 @@ namespace ice::math
         vec<Size, T> result;
         for (u32 i = 0; i < Size; ++i)
         {
-            result.v[0][i] = T{ left.v[0][i] - right.v[0][i] };
+            result.v[0][i] = left.v[0][i] - T{ right.v[0][i] };
         }
         return result;
     }
@@ -52,7 +52,7 @@ namespace ice::math
         vec<Size, T> result;
         for (u32 i = 0; i < Size; ++i)
         {
-            result.v[0][i] = T{ left.v[0][i] * right };
+            result.v[0][i] = left.v[0][i] * T{ right };
         }
         return result;
     }
@@ -63,7 +63,7 @@ namespace ice::math
         vec<Size, T> result;
         for (u32 i = 0; i < Size; ++i)
         {
-            result.v[0][i] = T{ left.v[0][i] / right };
+            result.v[0][i] = left.v[0][i] / T{ right };
         }
         return result;
     }
