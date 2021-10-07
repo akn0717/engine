@@ -1,10 +1,17 @@
 #include <ice/memory/memory_globals.hxx>
 #include <ice/platform_app.hxx>
 #include <ice/platform_event.hxx>
+#include <ice/resource_system.hxx>
 #include <ice/resource_index.hxx>
+#include <ice/resource_query.hxx>
 #include <ice/asset_system.hxx>
 #include <ice/asset_module.hxx>
+#include <ice/asset_loader.hxx>
+#include <ice/asset_pipeline.hxx>
+#include <ice/module_register.hxx>
 #include <ice/collections.hxx>
+#include <ice/app_info.hxx>
+#include <ice/log.hxx>
 
 #include <CLI/CLI.hpp>
 
@@ -39,37 +46,102 @@ int main(int argc, char** argv)
     // CLI data
     CLI::App app{ };
 
-    std::string asset_name;
-    app.add_option("-a,--asset", asset_name, "The asset to compile.")
-        ->required();
+    //std::string asset_name;
+    //app.add_option("-a,--asset", asset_name, "The asset to compile.")
+    //    ->required();
 
-    ice::Map<std::string, ice::AssetType> types{ alloc };
-    types.emplace("tex", ice::AssetType::Texture);
-    types.emplace("texture", ice::AssetType::Texture);
-    types.emplace("mesh", ice::AssetType::Mesh);
+    //ice::Map<std::string, ice::AssetType> types{ alloc };
+    //types.emplace("tex", ice::AssetType::Texture);
+    //types.emplace("texture", ice::AssetType::Texture);
+    //types.emplace("mesh", ice::AssetType::Mesh);
 
-    ice::AssetType asset_type;
-    app.add_option("-t,--type", asset_type, "The asset type.")
-        ->transform(CLI::Transformer(types))
-        ->required();
+    //ice::AssetType asset_type;
+    //app.add_option("-t,--type", asset_type, "The asset type.")
+    //    ->transform(CLI::Transformer(types))
+    //    ->required();
 
-    std::string mount_dir;
-    app.add_option("--mount", mount_dir, "The directory to be mounted, where the asset is located.")
-        ->default_val(".")
-        ->required();
+    //std::string mount_dir;
+    //app.add_option("--mount", mount_dir, "The directory to be mounted, where the asset is located.")
+    //    ->default_val(".")
+    //    ->required();
 
-    std::vector<std::string> module_dirs;
-    app.add_option("--module-dir", module_dirs, "Location of Ice modules.")
-        ->default_val(".");
+    //std::vector<std::string> module_dirs;
+    //app.add_option("--module-dir", module_dirs, "Location of Ice modules.")
+    //    ->default_val(".");
 
-    std::vector<std::string> modules;
-    app.add_option("-m,--module", modules, "File names of asset modules (ex. asset_module.dll).")
-        ->required();
+    //std::vector<std::string> modules;
+    //app.add_option("-m,--module", modules, "File names of asset modules (ex. asset_module.dll).")
+    //    ->required();
 
     CLI11_PARSE(app, argc, argv);
 
-    //// The main allocator object
-    //auto& main_allocator = core::memory::globals::default_allocator();
+
+    ice::i32 app_result = -1;
+
+    // The application lifetime scope
+    {
+        ice::UniquePtr<ice::ResourceSystem> resource_system = ice::create_resource_system(alloc);
+        ice::UniquePtr<ice::ModuleRegister> mod = ice::create_default_module_register(alloc);
+
+        {
+            ice::HeapString<> working_dir{ alloc };
+            ice::working_directory(working_dir);
+
+            ice::HeapString<> app_location{ alloc };
+            ice::app_location(app_location);
+
+            ice::pod::Array<ice::StringID> schemes{ ice::memory::default_scratch_allocator() };
+            ice::pod::array::push_back(schemes, ice::scheme_file);
+            ice::pod::array::push_back(schemes, ice::scheme_directory);
+
+            resource_system->register_index(
+                schemes,
+                ice::create_filesystem_index(alloc, working_dir)
+            );
+
+            ice::pod::array::clear(schemes);
+            ice::pod::array::push_back(schemes, ice::scheme_dynlib);
+
+            resource_system->register_index(
+                schemes,
+                ice::create_dynlib_index(alloc, app_location)
+            );
+        }
+
+        using ice::operator""_uri;
+
+        ice::u32 const mounted_modules = resource_system->mount("dynlib://./.."_uri);
+        ICE_LOG(
+            ice::LogSeverity::Debug, ice::LogTag::Game,
+            "Found {} dynamic modules.",
+            mounted_modules
+        );
+
+        ice::ResourceQuery query{ };
+        if (resource_system->query_changes(query))
+        {
+            for (ice::Resource* res : query.objects)
+            {
+                ICE_LOG(
+                    ice::LogSeverity::Debug, ice::LogTag::Game,
+                    "Tryint to load module {}...",
+                    res->name()
+                );
+
+                bool const load_success = mod->load_module(alloc, res->location().path);
+
+                ICE_LOG(
+                    ice::LogSeverity::Debug, ice::LogTag::Game,
+                    "> load result: {}",
+                    load_success ? "successful" : "failed"
+                );
+            }
+        }
+
+        ice::UniquePtr<ice::AssetSystem> asset_system = ice::create_asset_system(alloc, *resource_system);
+        ice::load_asset_pipeline_modules(alloc, *mod, *asset_system);
+
+    }
 
     //// Special proxy allocators for the game and internal systems.
     //core::memory::proxy_allocator filesystem_allocator{ "resource-filesystem", main_allocator };
