@@ -9,6 +9,7 @@ rapidxml/1.13
 Assimp/5.0.1@iceshard/stable
 SDL2/2.0.14@iceshard/stable
 imgui/1.77@iceshard/stable
+cli11/2.1.1
 
 [build_requires]
 fastbuild-generator/0.2.0@iceshard/stable

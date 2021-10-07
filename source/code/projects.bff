@@ -1,6 +1,6 @@
 #once
 
-// Include all known project description files
+; Core libraries
 #include "core/core/core.bff"
 #include "core/memsys/memsys.bff"
 #include "core/collections/collections.bff"
@@ -8,30 +8,40 @@
 #include "core/utils/utils.bff"
 #include "core/tasks/tasks.bff"
 
+; Low level systems
 #include "systems/resource_system/resource_system.bff"
 #include "systems/asset_system/asset_system.bff"
 #include "systems/render_system/render_system.bff"
 #include "systems/input_system/input_system.bff"
 
+; Platform integrations
 #include "platforms/platform/platform.bff"
 #include "platforms/platform_win32/platform_win32.bff"
 
+; Engine projects
 #include "iceshard/application/application.bff"
 #include "iceshard/engine/engine.bff"
 #include "iceshard/devui/devui.bff"
 #include "iceshard/iceshard/iceshard.bff"
 
+; Optional modules
 #include "modules/imgui_module/imgui_module.bff"
 #include "modules/iceshard_pipelines/iceshard_pipelines.bff"
 #include "modules/vulkan_renderer/vulkan_renderer.bff"
 
+; Helper frameworks
 #include "framework/framework_base/framework_base.bff"
 #include "framework/framework_2d/framework_2d.bff"
 
+; Example iceshard app / game
 #include "test/test.bff"
 
+; Unit test projects
 #include "core/core/core_tests.bff"
 #include "core/memsys/memsys_tests.bff"
 #include "core/collections/collections_tests.bff"
 
 #include "systems/resource_system/resource_system_tests.bff"
+
+; Tools
+#include "tools/asset_compiler/asset_compiler.bff"

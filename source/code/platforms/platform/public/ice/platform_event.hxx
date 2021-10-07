@@ -1,6 +1,7 @@
 #pragma once
 #include <ice/span.hxx>
 #include <ice/shard.hxx>
+#include <ice/string.hxx>
 
 namespace ice::platform
 {
